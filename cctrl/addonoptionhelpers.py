@@ -19,6 +19,7 @@
 from os import path
 import re
 import json
+from cctrl.oshelpers import recode_input
 
 
 def if_file_get_content(value):
@@ -36,7 +37,7 @@ def if_file_get_content(value):
             content = f.read()
             f.close()
             return content
-    return value
+    return recode_input(value)
 
 
 def parse_additional_addon_options(options):
