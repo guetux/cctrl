@@ -678,6 +678,24 @@ class AppController():
         except (KeyError, GoneError):
             return {}
 
+    def _updateConfig(self, app_name, deployment_name, new_config):
+        try:
+            self.api.delete_addon(app_name, deployment_name, 'config.free')
+        except GoneError:
+            pass
+
+        try:
+            self.api.create_addon(
+                app_name,
+                deployment_name,
+                'config.free',
+                json.dumps(new_config)
+            )
+            return True
+        except ConflictDuplicateError:
+            return False
+
+
     def showConfig(self, args):
         """
             Show a list of all config vars
@@ -700,33 +718,38 @@ class AppController():
             Set one or more config params
         """
         app_name, deployment_name = self.parse_app_deployment_name(args.name)
-        config = self._getConfig(args)
+        old_config = self._getConfig(args)
+        new_config = old_config.copy()
 
-        new_config_vars = {}
         try:
             for param in args.param:
                 name, value = param.split('=')
-                new_config_vars[name] = value
+                new_config[name] = value
         except ValueError:
             print messages['ParameterMalformed']
             return
 
-        new_config = dict(config.items() + new_config_vars.items())
+        if new_config != old_config:
+            self._updateConfig(app_name, deployment_name, new_config)
+            print_config(new_config)
 
-        try:
-            self.api.delete_addon(app_name, deployment_name, 'config.free')
-        except GoneError:
-            pass
+    def unsetConfigVars(self, args):
+        """
+            Unset one or more config params
+        """
+        app_name, deployment_name = self.parse_app_deployment_name(args.name)
+        old_config = self._getConfig(args)
+        new_config = old_config.copy()
 
-        self.api.create_addon(
-            app_name,
-            deployment_name,
-            'config.free',
-            json.dumps(new_config)
-        )
+        for param in args.param:
+            param = param.decode('utf8')
+            if param in new_config:
+                del new_config[param]
+
+        if new_config != old_config:
+            self._updateConfig(app_name, deployment_name, new_config)
 
         print_config(new_config)
-
 
     def showUser(self, args):
         """
