@@ -21,6 +21,7 @@ import time
 import re
 import subprocess
 import shlex
+import json
 import webbrowser
 from settings import SSH_FORWARDER, SSH_FORWARDER_PORT
 from datetime import datetime
@@ -674,30 +675,58 @@ class AppController():
         try:
             addon = self.api.read_addon(app_name, deployment_name, 'config.free')
             return addon['settings']['CONFIG_VARS']
-        except KeyError:
-            return None
+        except (KeyError, GoneError):
+            return {}
 
     def showConfig(self, args):
         """
             Show a list of all config vars
         """
         config = self._getConfig(args)
-        if not config:
-            print messages['ConfigNotFound']
-        else:
-            print_config(config, args.shell)
+        print_config(config, args.shell)
 
     def getConfigVar(self, args):
         """
             Show one config param
         """
         config = self._getConfig(args)
-        if not config:
-            print messages['ConfigNotFound']
-        elif args.param not in config:
+        if args.param not in config:
             print
         else:
             print config[args.param]
+
+    def setConfigVars(self, args):
+        """
+            Set one or more config params
+        """
+        app_name, deployment_name = self.parse_app_deployment_name(args.name)
+        config = self._getConfig(args)
+
+        new_config_vars = {}
+        try:
+            for param in args.param:
+                name, value = param.split('=')
+                new_config_vars[name] = value
+        except ValueError:
+            print messages['ParameterMalformed']
+            return
+
+        new_config = dict(config.items() + new_config_vars.items())
+
+        try:
+            self.api.delete_addon(app_name, deployment_name, 'config.free')
+        except GoneError:
+            pass
+
+        self.api.create_addon(
+            app_name,
+            deployment_name,
+            'config.free',
+            json.dumps(new_config)
+        )
+
+        print_config(new_config)
+
 
     def showUser(self, args):
         """

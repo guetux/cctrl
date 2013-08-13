@@ -430,6 +430,14 @@ def parse_cmdline(app, api):
     getConfigVar_subparser.add_argument('param',  help="parameter name")
     getConfigVar_subparser.set_defaults(func=app.getConfigVar)
 
+    setConfigVar_subparser = subparsers.add_parser(
+        'config.set',
+        help="set one or more config parameters")
+    setConfigVar_subparser.add_argument(
+        'param',
+        nargs='+',
+        help='config parameters. Format: KEY1=VALUE1 [KEY2=VALUE2]')
+    setConfigVar_subparser.set_defaults(func=app.setConfigVars)
 
     parser.add_argument(
         '-v',

@@ -426,6 +426,8 @@ def print_addon_details(addon):
                 print '   %-25ls: %s' % (key, value)
 
 def print_config(config, shell=False):
+    if not config:
+        print
     for param, value in config.items():
         if shell:
             print '{0}={1}'.format(param, value)
