@@ -425,6 +425,12 @@ def print_addon_details(addon):
             for key, value in addon['settings'].items():
                 print '   %-25ls: %s' % (key, value)
 
+def print_config(config, shell=False):
+    for param, value in config.items():
+        if shell:
+            print '{0}={1}'.format(param, value)
+        else:
+            print '{0:20}: {1}'.format(param, value)
 
 def print_worker_list(workers):
     print 'Workers'

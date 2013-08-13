@@ -33,7 +33,7 @@ from cctrl.output import print_deployment_details, print_app_details,\
     print_alias_details, print_log_entries, print_list_apps,\
     print_addon_details, print_addons, print_addon_list, print_alias_list, \
     print_worker_list, print_worker_details, print_cronjob_list, \
-    print_cronjob_details, print_addon_creds
+    print_cronjob_details, print_addon_creds, print_config
 from output import print_user_list_app, print_user_list_deployment
 from cctrl.addonoptionhelpers import parse_additional_addon_options
 
@@ -668,6 +668,19 @@ class AppController():
         except GoneError:
             raise InputErrorException('WrongAddon')
         return True
+
+    def showConfig(self, args):
+        """
+            Show a list of all config vars
+        """
+        app_name, deployment_name = self.parse_app_deployment_name(args.name)
+        try:
+            addon = self.api.read_addon(app_name, deployment_name, 'config.free')
+            config = addon['settings']['CONFIG_VARS']
+        except KeyError:
+            print messages['ConfigNotFound']
+
+        print_config(config, args.shell)
 
     def showUser(self, args):
         """
