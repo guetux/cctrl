@@ -669,18 +669,35 @@ class AppController():
             raise InputErrorException('WrongAddon')
         return True
 
+    def _getConfig(self, args):
+        app_name, deployment_name = self.parse_app_deployment_name(args.name)
+        try:
+            addon = self.api.read_addon(app_name, deployment_name, 'config.free')
+            return addon['settings']['CONFIG_VARS']
+        except KeyError:
+            return None
+
     def showConfig(self, args):
         """
             Show a list of all config vars
         """
-        app_name, deployment_name = self.parse_app_deployment_name(args.name)
-        try:
-            addon = self.api.read_addon(app_name, deployment_name, 'config.free')
-            config = addon['settings']['CONFIG_VARS']
-        except KeyError:
+        config = self._getConfig(args)
+        if not config:
             print messages['ConfigNotFound']
+        else:
+            print_config(config, args.shell)
 
-        print_config(config, args.shell)
+    def getConfigVar(self, args):
+        """
+            Show one config param
+        """
+        config = self._getConfig(args)
+        if not config:
+            print messages['ConfigNotFound']
+        elif args.param not in config:
+            print
+        else:
+            print config[args.param]
 
     def showUser(self, args):
         """
